@@ -1,5 +1,4 @@
 import os
-
 import streamlit as st
 import time
 from parser import *
@@ -14,15 +13,18 @@ if plik is not None:
 
     parseSleep(plik)
     bar = st.progress(0,"analizujemy twoje dane")
-    percent_complete = 0
+
     for percent_complete in range(50):
         time.sleep(0.05)
         bar.progress(percent_complete + 1)
+        percent_complete = percent_complete + 1
     time.sleep(1)
     parseHeartRate(plik)
-    for percent_complete in range(50):
+    for percent_complete in range(50,100):
+
         time.sleep(0.05)
         bar.progress(percent_complete + 1)
+        percent_complete = percent_complete + 1
     time.sleep(1)
     if os.path.getsize("sleep.csv") > 2:
         df_heart = pd.read_csv("heart_rate.csv")
