@@ -1,4 +1,4 @@
-import lxml.etree as ET
+from lxml import etree as ET
 import pandas as pd
 
 # input_file = 'test.xml'  #plik do testow parsera

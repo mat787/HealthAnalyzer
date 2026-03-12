@@ -1,3 +1,6 @@
 streamlit
 pandas
 lxml
+matplotlib
+plotly
+neurokit2
