@@ -6,7 +6,6 @@ import pandas as pd
 def load_one_type(file_path, tag_name, type_name=None):
     """
     Pobiera dane na podstawie samego tagu (np. 'ActivitySummary') lub tagu i typu (np. 'Record' + 'hr').
-    Chirurgiczna pęseta do eksploracji danych.
     """
     health_data = []
 

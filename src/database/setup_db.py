@@ -1,10 +1,8 @@
 import sqlite3
-import pandas as pd
-from parser import load_all_health_data
-from utils import clean_data
+from src.utils.parser import load_all_health_data
+from src.utils.utils import clean_data
 
-# 1. Ścieżki i mapowanie (skopiuj swój słownik z notebooka)
-XML_PATH = "eksport.xml"
+XML_PATH = "../../eksport.xml"
 DB_PATH = "health_data.db"
 
 short_names = {
@@ -81,7 +79,7 @@ short_names = {
 
 
 def setup_database():
-    print(f"🚀 Rozpoczynam proces budowania bazy: {DB_PATH}")
+    print(f" Rozpoczynam proces budowania bazy: {DB_PATH}")
     conn = sqlite3.connect(DB_PATH)
 
     # 1. Wczytujemy dane (Tutaj używamy Twojej funkcji parsera)
@@ -89,12 +87,11 @@ def setup_database():
 
     for table_name, df in data_tables.items():
         t_name = table_name.lower()
-        print(f"\n📦 Przetwarzanie: {t_name}...")
+        print(f"\n Przetwarzanie: {t_name}...")
 
-        # --- WERSJA BRUDNA (RAW) ---
-        # Zapisujemy wszystko tak, jak przyszło z XML
+
         df.to_sql(f"raw_{t_name}", conn, if_exists='replace', index=False)
-        print(f"  ✅ Zapisano wersję RAW ({len(df)} rekordów)")
+        print(f" Zapisano wersję RAW ({len(df)} rekordów)")
 
         # --- WERSJA CZYSTA (CLEAN) ---
         df_cleaned = clean_data(df, t_name)
@@ -116,7 +113,7 @@ def setup_database():
 
     conn.commit()
     conn.close()
-    print("\n✅ Baza danych gotowa! Możesz teraz podłączyć ją do Streamlita.")
+    print("\nBaza danych gotowa.\n")
 
 
 if __name__ == "__main__":
