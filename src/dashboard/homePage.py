@@ -1,12 +1,9 @@
-import os
-import sqlite3
-
 import streamlit as st
 import time
-from parser import *
-from setup_db import short_names
+from src.utils.parser import *
+from src.database.setup_db import short_names
 
-st.title("HealthAnalyzer")
+st.title("Apple Health Analyzer")
 st.header("Wstaw swój plik Apple Health poniżej")
 
 
@@ -28,8 +25,6 @@ if plik is not None:
         bar.progress(percent_complete + 1)
         percent_complete = percent_complete + 1
     time.sleep(1)
-
-
 
     bar.progress(100)
     bar.empty()
