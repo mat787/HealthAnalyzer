@@ -1,95 +1,78 @@
 from lxml import etree as ET
 import pandas as pd
+import os
 
-# input_file = 'test.xml'  #plik do testow parsera
 
-def load_one_type(file_path, tag_name, type_name=None):
-    """
-    Pobiera dane na podstawie samego tagu (np. 'ActivitySummary') lub tagu i typu (np. 'Record' + 'hr').
-    """
-    health_data = []
+_TAGS = frozenset({"Record", "Workout", "ActivitySummary"})
+_DATE_COLS = ["startDate", "endDate", "creationDate", "dateComponents"]
 
-    if file_path is None:
-        return "Zła ścieżka pliku"
 
-    context = ET.iterparse(file_path, events=("end",))
+def load_all_health_data(file_path, mapping, progress_callback=None):
+    if isinstance(file_path, str):
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Nie znaleziono pliku: {file_path}")
+        file_obj = open(file_path, "rb")
+        own_file = True
+    else:
+        file_obj, own_file = file_path, False
+        file_obj.seek(0)
 
-    for event, elem in context:
-        if elem.tag == tag_name:
-            current_type = elem.get('type') or elem.get('workoutActivityType')
-            if type_name is None or current_type == type_name:
-                record = dict(elem.attrib)
-                for child in elem:
-                    if child.tag == "MetadataEntry":
-                        record[child.get('key')] = child.get('value')
-                health_data.append(record)
+    file_obj.seek(0, 2)
+    total_size = file_obj.tell()
+    file_obj.seek(0)
 
-        elem.clear()
-        while elem.getprevious() is not None:
-            del elem.getparent()[0]
+    buckets     = {"Record": [], "Workout": [], "ActivitySummary": []}
+    mapping_get = mapping.get
+    last_pct    = -1
 
-    if health_data:
-        df = pd.DataFrame(health_data)
-        if 'value' in df.columns:
-            df['value'] = pd.to_numeric(df['value'], errors='coerce')
-        for date_col in ['startDate', 'endDate', 'creationDate']:
-            if date_col in df.columns:
-                df[date_col] = pd.to_datetime(df[date_col])
-        return df
-    return pd.DataFrame()
+    try:
+        for _, elem in ET.iterparse(file_obj, events=("end",)):
+            tag = elem.tag
+            if tag not in _TAGS:
+                elem.clear()
+                continue
 
-def load_all_health_data(file_path, mapping):
-    """
-    Wczytuje dane i grupuje je w DUŻE tabele według tagów (Record, Workout, ActivitySummary).
-    Zamiast 50 małych tabel, otrzymasz kilka zbiorczych, co jest lepsze dla bazy SQL.
-    """
-    if file_path is None:
-        return "Zła ścieżka pliku"
-    if mapping is None:
-        mapping = {}
+            if progress_callback:
+                pct = min(int(file_obj.tell() / total_size * 95), 95)
+                if pct > last_pct:
+                    progress_callback(pct)
+                    last_pct = pct
 
-    # 1. Inicjalizujemy kubełki na GŁÓWNE TAGI
-    data_buckets = {
-        "Record": [],
-        "Workout": [],
-        "ActivitySummary": []
-    }
+            long_type = elem.get("type") or elem.get("workoutActivityType") or tag
 
-    context = ET.iterparse(file_path, events=("end",))
+            if tag != "ActivitySummary" and long_type not in mapping:
+                elem.clear()
+                continue
 
-    for event, elem in context:
-        tag = elem.tag
-        if tag in data_buckets:
-            long_type = elem.get('type') or elem.get('workoutActivityType') or tag
-            if long_type in mapping or tag == "ActivitySummary":
-                record = dict(elem.attrib)
-                if long_type in mapping:
-                    record['type'] = mapping[long_type]
-                
-                for child in elem:
-                    if child.tag == "MetadataEntry":
-                        record[child.get('key')] = child.get('value')
-                data_buckets[tag].append(record)
+            record = dict(elem.attrib)
+            if long_type in mapping:
+                record["type"] = mapping_get(long_type)
 
-        elem.clear()
+            for child in elem:
+                if child.tag == "MetadataEntry" and (key := child.get("key")):
+                    record[key] = child.get("value")
 
+            buckets[tag].append(record)
+            elem.clear()
+    finally:
+        if own_file:
+            file_obj.close()
 
     final_dfs = {}
-    print("📊 Konwertuję dane na duże tabele zbiorcze...")
+    for i, (tag, records) in enumerate(buckets.items()):
+        if not records:
+            continue
+        df = pd.DataFrame(records)
+        df = df.loc[:, df.columns.notna()]
+        if "value" in df.columns:
+            df["value"] = pd.to_numeric(df["value"], errors="coerce")
+        for col in (c for c in _DATE_COLS if c in df.columns):
+            df[col] = pd.to_datetime(df[col], errors="coerce")
+        final_dfs[tag] = df
+        if progress_callback:
+            progress_callback(95 + int((i + 1) / len(buckets) * 5))
 
-    for tag, records in data_buckets.items():
-        if records:
-            df = pd.DataFrame(records)
-            if 'value' in df.columns:
-                df['value'] = pd.to_numeric(df['value'], errors='coerce')
-            for date_col in ['startDate', 'endDate', 'creationDate']:
-                if date_col in df.columns:
-                    df[date_col] = pd.to_datetime(df[date_col])
-            final_dfs[tag] = df
+    if progress_callback:
+        progress_callback(100)
 
-    print(f"✅ Wczytano {len(final_dfs)} dużych tabel!")
     return final_dfs
-
-
-
-

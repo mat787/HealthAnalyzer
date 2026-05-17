@@ -3,8 +3,12 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 
 from src.utils.ekg import *
+st.set_page_config(layout="wide")
 
-plik = st.file_uploader("wstaw plik","csv",False)
+st.title("EKG Analyzer")
+st.header("Wstaw swój plik EKG poniżej")
+
+plik = st.file_uploader("Wstaw plik ","csv",False)
 if plik is not None:
     raw,signals,info,plt = load_ecg(plik)
     st.pyplot(plt)

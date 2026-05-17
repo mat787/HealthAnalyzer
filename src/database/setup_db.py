@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from src.utils.parser import load_all_health_data
 from src.utils.utils import clean_data
@@ -78,17 +79,17 @@ short_names = {
 }
 
 
-def setup_database():
-    print(f" Rozpoczynam proces budowania bazy: {DB_PATH}")
-    conn = sqlite3.connect(DB_PATH)
+def write_tables_to_db(data_tables, db_path=DB_PATH):
+    if not data_tables:
+        print("Brak danych do zapisania do bazy.")
+        return
 
-    # 1. Wczytujemy dane (Tutaj używamy Twojej funkcji parsera)
-    data_tables = load_all_health_data(XML_PATH, short_names)
+    print(f" Rozpoczynam proces budowania bazy: {db_path}")
+    conn = sqlite3.connect(db_path)
 
     for table_name, df in data_tables.items():
         t_name = table_name.lower()
         print(f"\n Przetwarzanie: {t_name}...")
-
 
         df.to_sql(f"raw_{t_name}", conn, if_exists='replace', index=False)
         print(f" Zapisano wersję RAW ({len(df)} rekordów)")
@@ -116,5 +117,13 @@ def setup_database():
     print("\nBaza danych gotowa.\n")
 
 
-if __name__ == "__main__":
-    setup_database()
+def setup_database():
+    # 1. Wczytujemy dane (Tutaj używamy Twojej funkcji parsera)
+    data_tables = load_all_health_data(XML_PATH, short_names)
+    write_tables_to_db(data_tables, DB_PATH)
+
+
+
+def delete_db():
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
