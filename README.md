@@ -1,121 +1,29 @@
-📂 Analiza struktury danych (Research)
-1. Plik export.xml
+# Apple Health Analyzer
 
-Główny plik bazy danych Apple Health. Zastosowano podejście iteracyjne (iterparse), aby zoptymalizować zużycie pamięci RAM przy przetwarzaniu dużych zbiorów (400k+ rekordów).
+Profesjonalna aplikacja analityczna do przetwarzania, wizualizacji oraz wykrywania anomalii w danych fizjologicznych pochodzących z ekosystemu Apple (iPhone & Apple Watch). Projekt demonstruje pełen pipeline ETL (Extract, Transform, Load) oraz implementację modeli uczenia maszynowego na rzeczywistych, "zaszumionych" danych z urządzeń wearables.
 
-Pomijamy Correlation, 
+##  Kluczowe cechy
+- **Algorytm Isolation Forest**: Wykorzystanie nienadzorowanego modelu uczenia maszynowego do detekcji nienaturalnych zachowań organizmu (np. tachykardii spoczynkowej).
+- **Zaawansowany pipeline ETL**: Zoptymalizowane parsowanie złożonych struktur XML oraz proporcjonalna dystrybucja skumulowanych pakietów danych w czasie (rozbijanie pomiarów).
+- **Wygładzanie fizjologiczne**: Wdrożenie techniki średniej ruchomej (Rolling Average) do modelowania "długu fizjologicznego", co drastycznie redukuje liczbę fałszywych alarmów (False Positives).
+- **Standaryzacja stref czasowych**: Automatyczna konwersja logów systemowych do formatu UTC, zapewniająca spójność analityczną przy zmianach stref oraz czasu letniego/zimowego.
+- **Interaktywny Dashboard**: Zbudowany w oparciu o architekturę Streamlit, pozwalający na dynamiczną eksplorację danych.
 
-Podstawowe informacje o użytkowniku:
-*     HKCharacteristicTypeIdentifierDateOfBirth                   
-*     HKCharacteristicTypeIdentifierBiologicalSex                 CDATA #REQUIRED
-*     HKCharacteristicTypeIdentifierBloodType                     CDATA #REQUIRED
-*     HKCharacteristicTypeIdentifierFitzpatrickSkinType           CDATA #REQUIRED
-*     HKCharacteristicTypeIdentifierCardioFitnessMedicationsUse   CDATA #REQUIRED
+##  Technologie
+- **Język**: Python 3.9+
+- **Przetwarzanie Danych**: Pandas, NumPy
+- **Machine Learning**: Scikit-Learn (Isolation Forest, StandardScaler)
+- **Wizualizacja & Interfejs**: Streamlit
 
-<!ELEMENT Record ((MetadataEntry|HeartRateVariabilityMetadataList)*)>
-<!ATTLIST Record
-  type          CDATA #REQUIRED
-  unit          CDATA #IMPLIED
-  value         CDATA #IMPLIED
-  sourceName    CDATA #REQUIRED
-  sourceVersion CDATA #IMPLIED
-  device        CDATA #IMPLIED
-  creationDate  CDATA #IMPLIED
-  startDate     CDATA #REQUIRED
-  endDate       CDATA #REQUIRED
->
-
-<!ELEMENT Workout ((MetadataEntry|WorkoutEvent|WorkoutRoute|WorkoutStatistics)*)>
-<!ATTLIST Workout
-  workoutActivityType   CDATA #REQUIRED
-  duration              CDATA #IMPLIED
-  durationUnit          CDATA #IMPLIED
-  totalDistance         CDATA #IMPLIED
-  totalDistanceUnit     CDATA #IMPLIED
-  totalEnergyBurned     CDATA #IMPLIED
-  totalEnergyBurnedUnit CDATA #IMPLIED
-  sourceName            CDATA #REQUIRED
-  sourceVersion         CDATA #IMPLIED
-  device                CDATA #IMPLIED
-  creationDate          CDATA #IMPLIED
-  startDate             CDATA #REQUIRED
-  endDate               CDATA #REQUIRED
->
-<!ELEMENT WorkoutActivity ((MetadataEntry)*)>
-<!ATTLIST WorkoutActivity
-  uuid                 CDATA #REQUIRED
-  startDate            CDATA #REQUIRED
-  endDate              CDATA #IMPLIED
-  duration             CDATA #IMPLIED
-  durationUnit         CDATA #IMPLIED
->
-<!ELEMENT WorkoutEvent ((MetadataEntry)*)>
-<!ATTLIST WorkoutEvent
-  type                 CDATA #REQUIRED
-  date                 CDATA #REQUIRED
-  duration             CDATA #IMPLIED
-  durationUnit         CDATA #IMPLIED
->
-<!ELEMENT WorkoutStatistics EMPTY>
-<!ATTLIST WorkoutStatistics
-  type                 CDATA #REQUIRED
-  startDate            CDATA #REQUIRED
-  endDate              CDATA #REQUIRED
-  average              CDATA #IMPLIED
-  minimum              CDATA #IMPLIED
-  maximum              CDATA #IMPLIED
-  sum                  CDATA #IMPLIED
-  unit                 CDATA #IMPLIED
->
-<!ELEMENT WorkoutRoute ((MetadataEntry|FileReference)*)>
-<!ATTLIST WorkoutRoute
-  sourceName    CDATA #REQUIRED
-  sourceVersion CDATA #IMPLIED
-  device        CDATA #IMPLIED
-  creationDate  CDATA #IMPLIED
-  startDate     CDATA #REQUIRED
-  endDate       CDATA #REQUIRED
->
-<!ELEMENT FileReference EMPTY>
-<!ATTLIST FileReference
-  path CDATA #REQUIRED
->
-<!ELEMENT ActivitySummary EMPTY>
-<!ATTLIST ActivitySummary
-  dateComponents           CDATA #IMPLIED
-  activeEnergyBurned       CDATA #IMPLIED
-  activeEnergyBurnedGoal   CDATA #IMPLIED
-  activeEnergyBurnedUnit   CDATA #IMPLIED
-  appleMoveTime            CDATA #IMPLIED
-  appleMoveTimeGoal        CDATA #IMPLIED
-  appleExerciseTime        CDATA #IMPLIED
-  appleExerciseTimeGoal    CDATA #IMPLIED
-  appleStandHours          CDATA #IMPLIED
-  appleStandHoursGoal      CDATA #IMPLIED
->
-<!ELEMENT MetadataEntry EMPTY>
-<!ATTLIST MetadataEntry
-  key   CDATA #REQUIRED
-  value CDATA #REQUIRED
->
-<!-- Note: Heart Rate Variability records captured by Apple Watch may include an associated list of instantaneous beats-per-minute readings. -->
-<!ELEMENT HeartRateVariabilityMetadataList (InstantaneousBeatsPerMinute*)>
-<!ELEMENT InstantaneousBeatsPerMinute EMPTY>
-<!ATTLIST InstantaneousBeatsPerMinute
-  bpm  CDATA #REQUIRED
-  time CDATA #REQUIRED
->
+##  Wygląd aplikacji
 
 
+##  Instalacja i uruchomienie
+Aby zbudować środowisko i uruchomić aplikację lokalnie, należy wykonać poniższe komendy w terminalu:
 
+```bash
+git clone [https://github.com/TwojLogin/AppleHealthAnalyzer.git](https://github.com/TwojLogin/AppleHealthAnalyzer.git)
+cd AppleHealthAnalyzer
+pip install -r requirements.txt
+streamlit run app.py
 
-
-2. Dane EKG (CSV)
-
-Dane surowe pobierane z folderu electrocardiograms/.
-
-    Częstotliwość próbkowania: 512 Hz.
-
-    Odprowadzenie: I (Lead I).
-
-    Jednostki: Napięcie wyrażone w mikrowoltach (μV), przeliczane na miliwolty (mV) na potrzeby analizy.
