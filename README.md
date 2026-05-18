@@ -16,6 +16,10 @@ Profesjonalna aplikacja analityczna do przetwarzania, wizualizacji oraz wykrywan
 - **Wizualizacja & Interfejs**: Streamlit
 
 ##  Wygląd aplikacji
+<img width="1919" height="952" alt="img" src="https://github.com/user-attachments/assets/c2fc74ce-88fa-4fe7-97f1-b0f8a012bdb2" />
+<img width="1918" height="948" alt="img_1" src="https://github.com/user-attachments/assets/91b2a492-0f6a-45e2-b3c6-9a5bb7087863" />
+<img width="1919" height="950" alt="img_2" src="https://github.com/user-attachments/assets/23511408-a22c-4e4b-836d-1a5df522963f" />
+<img width="1920" height="943" alt="img_3" src="https://github.com/user-attachments/assets/eccf1dd0-32ab-4a89-b197-5f73d9125067" />
 
 
 ##  Instalacja i uruchomienie
