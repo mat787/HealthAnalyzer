@@ -1,5 +1,11 @@
 import time
 from io import BytesIO
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
 
 import streamlit as st
 from src.utils.parser import load_all_health_data
@@ -40,11 +46,12 @@ else:
         st.success("Plik został pomyślnie przetworzony i znajduje się w pamięci!")
         if st.button("Przejdź do analizy (Dashboard)"):
             st.switch_page("pages/goalPage.py")
-        # Przycisk do zapisu w bazie (pojawia się dopiero, jak mamy dane)
         if st.button('Zapisz dane do lokalnej bazy danych'):
             final_dfs = st.session_state["final_dfs"]
             write_tables_to_db(final_dfs)
             st.success("Dane zostały pomyślnie zapisane w lokalnej bazie danych!")
+            time.sleep(2)
+            st.switch_page("pages/goalPage.py")
 
 
 

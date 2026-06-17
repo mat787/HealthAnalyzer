@@ -4,13 +4,16 @@ import streamlit as st
 import pandas as pd
 import time
 from pathlib import Path
+import sqlite3
+
+from src.models.ml import prepare_multivariate, find_anomaly_multivariate
+from src.utils.utils import clean_data
+from src.utils.variables import DB_PATH
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.models.ml import prepare_multivariate, find_anomaly_multivariate
-from src.utils.utils import clean_data
 
 st.set_page_config(layout="wide")
 st.title("HealthAnalyzer")
@@ -18,9 +21,15 @@ st.header("Analiza Danych")
 
 @st.cache_data
 def load_and_clean_data(tag_type):
-    final_dfs = st.session_state.get("final_dfs")
-    if final_dfs and tag_type in final_dfs:
-        return clean_data(final_dfs.get(tag_type))
+    conn = sqlite3.connect(DB_PATH)
+    if f"clean_{tag_type}" is not None:
+        table_name = f"clean_{tag_type}"
+        df=pd.read_sql(f"SELECT * FROM {table_name}", conn)
+        return df
+    else:
+        final_dfs = st.session_state.get("final_dfs")
+        if final_dfs and tag_type in final_dfs:
+            return clean_data(final_dfs.get(tag_type))
     return pd.DataFrame()
 
 all_records = load_and_clean_data("Record")
@@ -62,7 +71,7 @@ if not all_records.empty:
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader("Wykrywanie Anomalii (Multivariate)")
+    st.subheader("Wykrywanie Anomalii ")
     
     min_date = df_filtered_records['startDate'].min().date()
     max_date = df_filtered_records['startDate'].max().date()
@@ -72,7 +81,7 @@ if not all_records.empty:
     
     col1_ml, col2_ml = st.columns(2)
     with col1_ml:
-        resample_interval = st.selectbox("Interwał próbkowania (analiza):", ['1min','5min', '15min', '30min', '1H'], index=1, key="resample_ml")
+        resample_interval = st.selectbox("Interwał próbkowania:", ['1min','5min', '15min', '30min', '1H'], index=1, key="resample_ml")
     with col2_ml:
         contamination_level = st.slider("Czułość wykrywania:", 0.001, 0.2, 0.05, 0.005, format="%.3f")
 

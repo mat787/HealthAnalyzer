@@ -1,8 +1,14 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
-
+import sys
+from pathlib import Path
 from src.utils.ekg import *
+
+project_root = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+
 st.set_page_config(layout="wide")
 
 st.title("EKG Analyzer")
